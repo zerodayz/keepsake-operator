@@ -155,8 +155,35 @@ func (r *KeepsakeReconciler) deploymentForKeepsake(m *keepsakev1alpha1.Keepsake)
 						Name:    "keepsake",
 						Command: []string{"wiki", "--no-ssl"},
 						Ports: []corev1.ContainerPort{{
-							ContainerPort: 443,
+							ContainerPort: 80,
 							Name:          "keepsake",
+						}},
+					},
+					{
+						Image:   "mariadb:latest",
+						Name:    "keepsake-mysql",
+						Ports: []corev1.ContainerPort{{
+							ContainerPort: 3306,
+							Name:          "keepsake-mysql",
+						}},
+						Env: []corev1.EnvVar{{
+							Name:	"MYSQL_ROOT_PASSWORD",
+							Value:	"roottoor",
+						},
+						{
+							Name:	"MYSQL_DATABASE",
+							Value:	"gowiki",
+						},
+						{
+							Name:	"MYSQL_USER",
+							Value:	"gowiki",
+						},
+						{
+							Name:	"MYSQL_PASSWORD",
+							Value:	"gowiki55",
+						}},
+						VolumeMounts: []corev1.VolumeMount{{
+							
 						}},
 					}},
 				},
