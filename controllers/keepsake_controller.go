@@ -183,7 +183,8 @@ func (r *KeepsakeReconciler) deploymentForKeepsake(m *keepsakev1alpha1.Keepsake)
 							Value:	"gowiki55",
 						}},
 						VolumeMounts: []corev1.VolumeMount{{
-							
+							Name:	"keepsake-mysql-data",
+							MountPath: "/var/lib/mysql",
 						}},
 					}},
 				},
