@@ -1,0 +1,24 @@
+# permissions for end users to edit keepsakes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: keepsake-editor-role
+rules:
+- apiGroups:
+  - keepsake.example.com
+  resources:
+  - keepsakes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - keepsake.example.com
+  resources:
+  - keepsakes/status
+  verbs:
+  - get
