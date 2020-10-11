@@ -40,6 +40,16 @@ rules:
 - apiGroups:
   - keepsake.example.com
   resources:
+  - keepsakes/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - patch
+  - update
+- apiGroups:
+  - keepsake.example.com
+  resources:
   - keepsakes/status
   verbs:
   - get

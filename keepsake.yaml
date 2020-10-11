@@ -1,0 +1,6 @@
+apiVersion: keepsake.example.com/v1alpha1
+kind: Keepsake
+metadata:
+  name: keepsake-sample
+spec:
+  size: 1

@@ -43,6 +43,7 @@ type KeepsakeReconciler struct {
 
 // +kubebuilder:rbac:groups=keepsake.example.com,resources=keepsakes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=keepsake.example.com,resources=keepsakes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=keepsake.example.com,resources=keepsakes/finalizers,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
 
@@ -153,44 +154,52 @@ func (r *KeepsakeReconciler) deploymentForKeepsake(m *keepsakev1alpha1.Keepsake)
 					Containers: []corev1.Container{{
 						Image:   "quay.io/zerodayz/keepsake:latest",
 						Name:    "keepsake",
-						Command: []string{"wiki"},
+						Command: []string{"./wiki"},
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: 80,
 							Name:          "keepsake",
 						}},
 						Env: []corev1.EnvVar{{
-							Name:	"KEEPSAKE_DISABLE_SSL",
-							Value:	"1",
+							Name:  "KEEPSAKE_DISABLE_SSL",
+							Value: "1",
 						}},
 					},
-					{
-						Image:   "mariadb:latest",
-						Name:    "keepsake-mysql",
-						Ports: []corev1.ContainerPort{{
-							ContainerPort: 3306,
-							Name:          "keepsake-mysql",
-						}},
-						Env: []corev1.EnvVar{{
-							Name:	"MYSQL_ROOT_PASSWORD",
-							Value:	"roottoor",
-						},
 						{
-							Name:	"MYSQL_DATABASE",
-							Value:	"gowiki",
-						},
-						{
-							Name:	"MYSQL_USER",
-							Value:	"gowiki",
-						},
-						{
-							Name:	"MYSQL_PASSWORD",
-							Value:	"gowiki55",
+							Image: "mariadb:latest",
+							Name:  "keepsake-mysql",
+							Ports: []corev1.ContainerPort{{
+								ContainerPort: 3306,
+								Name:          "keepsake-mysql",
+							}},
+							Env: []corev1.EnvVar{{
+								Name:  "MYSQL_ROOT_PASSWORD",
+								Value: "roottoor",
+							},
+								{
+									Name:  "MYSQL_DATABASE",
+									Value: "gowiki",
+								},
+								{
+									Name:  "MYSQL_USER",
+									Value: "gowiki",
+								},
+								{
+									Name:  "MYSQL_PASSWORD",
+									Value: "gowiki55",
+								}},
+							VolumeMounts: []corev1.VolumeMount{{
+								Name:      "keepsake-mysql-data",
+								MountPath: "/var/lib/mysql",
+							}},
 						}},
-						VolumeMounts: []corev1.VolumeMount{{
-							Name:	"keepsake-mysql-data",
-							MountPath: "/var/lib/mysql",
-						}},
-					}},
+					Volumes: []corev1.Volume{
+						corev1.Volume{
+							Name: "keepsake-mysql-data",
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
+					},
 				},
 			},
 		},
