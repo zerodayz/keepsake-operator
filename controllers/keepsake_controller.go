@@ -46,6 +46,7 @@ type KeepsakeReconciler struct {
 // +kubebuilder:rbac:groups=keepsake.example.com,resources=keepsakes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=keepsake.example.com,resources=keepsakes/finalizers,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
 
 func (r *KeepsakeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
@@ -242,9 +243,9 @@ func (r *KeepsakeReconciler) serviceForKeepsake(m *keepsakev1alpha1.Keepsake) *c
 			Selector: ls,
 			Ports: []corev1.ServicePort{
 				{
-					Port: 80,
+					Port:       80,
 					TargetPort: intstr.IntOrString{IntVal: 8080},
-					Name: m.Name,
+					Name:       m.Name,
 				},
 			},
 		},
