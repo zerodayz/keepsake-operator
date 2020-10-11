@@ -153,10 +153,14 @@ func (r *KeepsakeReconciler) deploymentForKeepsake(m *keepsakev1alpha1.Keepsake)
 					Containers: []corev1.Container{{
 						Image:   "quay.io/zerodayz/keepsake:latest",
 						Name:    "keepsake",
-						Command: []string{"wiki", "--no-ssl"},
+						Command: []string{"wiki"},
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: 80,
 							Name:          "keepsake",
+						}},
+						Env: []corev1.EnvVar{{
+							Name:	"KEEPSAKE_DISABLE_SSL",
+							Value:	"1",
 						}},
 					},
 					{
