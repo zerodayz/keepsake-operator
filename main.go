@@ -31,6 +31,9 @@ import (
 	keepsakev1alpha1 "github.com/zerodayz/keepsake-operator/api/v1alpha1"
 	"github.com/zerodayz/keepsake-operator/controllers"
 	// +kubebuilder:scaffold:imports
+
+	// import 3rd party openshift routes
+	routev1 "github.com/openshift/api/route/v1"
 )
 
 // Every set of controllers needs a Scheme, which provides mappings between Kinds and their corresponding Go types.
@@ -46,6 +49,10 @@ func init() {
 	// This scheme will be populated by kubebuilder.
 	utilruntime.Must(keepsakev1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
+
+	// import 3rd party openshift routes
+	utilruntime.Must(routev1.AddToScheme(scheme))
+
 }
 
 func main() {

@@ -33,6 +33,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	routev1 "github.com/openshift/api/route/v1"
 )
 
 // KeepsakeReconciler reconciles a Keepsake object
@@ -115,6 +116,23 @@ func (r *KeepsakeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 	} else if err != nil {
 		log.Error(err, "Failed to get Service.")
+		return ctrl.Result{}, err
+	}
+
+	// Check if the Route already exists, if not create a new one
+	route := &routev1.Route{}
+	err = r.Get(ctx, types.NamespacedName{Name: keepsake.Name, Namespace: keepsake.Namespace}, route)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new Route object
+		route := r.routeForKeepsake(keepsake)
+		log.Info("Creating a new Route.", "Route.Namespace", route.Namespace, "Route.Name", route.Name)
+		err = r.Create(ctx, route)
+		if err != nil {
+			log.Error(err, "Failed to create new Route.", "Route.Namespace", route.Namespace, "Route.Name", route.Name)
+			return ctrl.Result{}, err
+		}
+	} else if err != nil {
+		log.Error(err, "Failed to get Route.")
 		return ctrl.Result{}, err
 	}
 
@@ -229,6 +247,32 @@ func (r *KeepsakeReconciler) deploymentForKeepsake(m *keepsakev1alpha1.Keepsake)
 	// Set Keepsake instance as the owner and controller
 	ctrl.SetControllerReference(m, dep, r.Scheme)
 	return dep
+}
+
+// routeForKeepsake function takes in a Keepsake object and returns a Route for that object.
+func (r *KeepsakeReconciler) routeForKeepsake(m *keepsakev1alpha1.Keepsake) *routev1.Route {
+	route := &routev1.Route{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      m.Name,
+			Namespace: m.Namespace,
+		},
+		Spec: routev1.RouteSpec{
+			Port: &routev1.RoutePort{
+				TargetPort: intstr.IntOrString{
+					IntVal: 8080,
+				},
+			},
+			To: routev1.RouteTargetReference{
+				Kind: "Service",
+				Name: "m.Name",
+			},
+			TLS: &routev1.TLSConfig{Termination: routev1.TLSTerminationEdge},
+			Path: "/",
+		},
+	}
+	// Set Keepsake instance as the owner of the Service.
+	controllerutil.SetControllerReference(m, route, r.Scheme)
+	return route
 }
 
 // serviceForKeepsake function takes in a Keepsake object and returns a Service for that object.
