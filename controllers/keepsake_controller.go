@@ -18,10 +18,10 @@ package controllers
 
 import (
 	"context"
-	"reflect"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -97,6 +97,23 @@ func (r *KeepsakeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		// Spec updated - return and requeue
 		return ctrl.Result{Requeue: true}, nil
+	}
+
+	// Check if the Service already exists, if not create a new one
+	service := &corev1.Service{}
+	err = r.Get(ctx, types.NamespacedName{Name: keepsake.Name, Namespace: keepsake.Namespace}, service)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new Service object
+		ser := r.serviceForKeepsake(keepsake)
+		log.Info("Creating a new Service.", "Service.Namespace", ser.Namespace, "Service.Name", ser.Name)
+		err = r.Create(ctx, ser)
+		if err != nil {
+			log.Error(err, "Failed to create new Service.", "Service.Namespace", ser.Namespace, "Service.Name", ser.Name)
+			return ctrl.Result{}, err
+		}
+	} else if err != nil {
+		log.Error(err, "Failed to get Service.")
+		return ctrl.Result{}, err
 	}
 
 	// Update the Keepsake status with the pod names
@@ -207,6 +224,29 @@ func (r *KeepsakeReconciler) deploymentForKeepsake(m *keepsakev1alpha1.Keepsake)
 	// Set Keepsake instance as the owner and controller
 	ctrl.SetControllerReference(m, dep, r.Scheme)
 	return dep
+}
+
+// serviceForKeepsake function takes in a Keepsake object and returns a Service for that object.
+func (r *KeepsakeReconciler) serviceForKeepsake(m *keepsakev1alpha1.Keepsake) *corev1.Service {
+	ls := labelsForKeepsake(m.Name)
+	ser := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      m.Name,
+			Namespace: m.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: ls,
+			Ports: []corev1.ServicePort{
+				{
+					Port: 80,
+					Name: m.Name,
+				},
+			},
+		},
+	}
+	// Set Keepsake instance as the owner of the Service.
+	controllerutil.SetControllerReference(m, ser, r.Scheme)
+	return ser
 }
 
 // labelsForKeepsake returns the labels for selecting the resources
