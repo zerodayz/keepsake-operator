@@ -29,11 +29,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	routev1 "github.com/openshift/api/route/v1"
 	keepsakev1alpha1 "github.com/zerodayz/keepsake-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	routev1 "github.com/openshift/api/route/v1"
 )
 
 // KeepsakeReconciler reconciles a Keepsake object
@@ -48,6 +48,7 @@ type KeepsakeReconciler struct {
 // +kubebuilder:rbac:groups=keepsake.example.com,resources=keepsakes/finalizers,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=route.openshift.io,resources=routes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
 
 func (r *KeepsakeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
@@ -266,7 +267,7 @@ func (r *KeepsakeReconciler) routeForKeepsake(m *keepsakev1alpha1.Keepsake) *rou
 				Kind: "Service",
 				Name: "m.Name",
 			},
-			TLS: &routev1.TLSConfig{Termination: routev1.TLSTerminationEdge},
+			TLS:  &routev1.TLSConfig{Termination: routev1.TLSTerminationEdge},
 			Path: "/",
 		},
 	}
