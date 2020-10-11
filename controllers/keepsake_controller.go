@@ -265,7 +265,7 @@ func (r *KeepsakeReconciler) routeForKeepsake(m *keepsakev1alpha1.Keepsake) *rou
 			},
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
-				Name: "m.Name",
+				Name: m.Name,
 			},
 			TLS:  &routev1.TLSConfig{Termination: routev1.TLSTerminationEdge},
 			Path: "/",
